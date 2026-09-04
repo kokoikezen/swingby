@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>swingbylab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">
+    <div class="logo">◉</div>
+    <div>
+      <h1>스윙바이 시뮬레이터</h1>
+      <p>N-body 중력장 실시간 수치적분 · RK4 적분기</p>
+    </div>
+  </div>
+  <div class="legend">
+    <span><b>드래그</b> 화면 이동</span>
+    <span><b>휠</b> 확대/축소</span>
+    <span><b>행성 클릭 후 드래그</b> 발사</span>
+  </div>
+</header>
+
+<main id="app">
+  <div id="stage">
+    <canvas id="space"></canvas>
+
+    <div id="telemetry" class="card overlay">
+      <div class="tele-row"><span class="k">임무 시각</span><span class="v" id="tTime">0일</span></div>
+      <div class="tele-row"><span class="k">태양 기준 속도</span><span class="v" id="tSpeed">—</span></div>
+      <div class="tele-row"><span class="k">태양 거리</span><span class="v" id="tDist">—</span></div>
+      <div class="tele-row"><span class="k">궤도 장반경 a</span><span class="v" id="tA">—</span></div>
+      <div class="tele-row"><span class="k">이심률 e</span><span class="v" id="tE">—</span></div>
+      <div class="tele-row"><span class="k">최근접 천체</span><span class="v" id="tNear">—</span></div>
+      <div class="tele-row status-row"><span class="k">상태</span><span class="v chip" id="tStatus">대기</span></div>
+      <div class="tele-row"><span class="k">누적 스윙바이 Δv</span><span class="v" id="tDv">0.00 km/s</span></div>
+    </div>
+  </div>
+
+  <aside id="panel">
+    <section class="card">
+      <h2>발사 설정</h2>
+      <label class="field">
+        <span>출발 행성</span>
+        <select id="selPlanet"></select>
+      </label>
+      <label class="field">
+        <span>목표 초과속도 v∞ <output id="outVinf">3.0 km/s</output></span>
+        <input type="range" id="rngVinf" min="0.2" max="15" step="0.1" value="3">
+      </label>
+      <label class="field">
+        <span>방향 (행성 공전방향 기준) <output id="outAng">0°</output></span>
+        <input type="range" id="rngAng" min="-180" max="180" step="5" value="0">
+      </label>
+      <p class="hint">+° 는 순행 기준 왼쪽(행성 앞쪽), −° 는 오른쪽(뒤쪽)입니다.</p>
+      <button id="btnLaunch" class="btn primary">🚀 발사</button>
+    </section>
+
+    <section class="card">
+      <h2>미션 프리셋</h2>
+      <div class="btn-grid">
+        <button class="btn" id="preMars">지구 → 화성 전이</button>
+        <button class="btn" id="preVenusGain">금성 스윙바이 · 가속</button>
+        <button class="btn" id="preVenusLoss">금성 스윙바이 · 감속</button>
+        <button class="btn" id="preVoyager">보이저 2호 대탐사</button>
+        <button class="btn danger" id="btnReset">전체 초기화</button>
+      </div>
+      <p class="hint">프리셋은 목표 행성의 위상각을 자동 계산해 전이 궤도를 만듭니다. 스윙바이 결과는 이벤트 로그에서 확인하세요.</p>
+    </section>
+
+    <section class="card">
+      <h2>시뮬레이션 제어</h2>
+      <div class="row">
+        <button id="btnPlay" class="btn">▶ 재생</button>
+        <button id="btnHome" class="btn">뷰 초기화</button>
+      </div>
+      <label class="field">
+        <span>시간 배속 <output id="outSpeed">30 일/초</output></span>
+        <input type="range" id="rngSpeed" min="0" max="100" step="1" value="55">
+      </label>
+      <label class="check"><input type="checkbox" id="chkPred" checked> 예측 궤적 표시 (발사 전)</label>
+      <label class="check"><input type="checkbox" id="chkFollow"> 우주선 카메라 추적</label>
+      <label class="check"><input type="checkbox" id="chkOrbits" checked> 공전 궤도선 표시</label>
+    </section>
+
+    <section class="card grow">
+      <h2>미션 로그</h2>
+      <ul id="log"></ul>
+    </section>
+  </aside>
+</main>
+
+<script src="js/constants.js"></script>
+<script src="js/physics.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/renderer.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
