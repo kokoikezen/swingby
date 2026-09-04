@@ -20,7 +20,16 @@ class Simulation {
     this.planets = PLANET_DEFS.map(def => {
       const st = this._circularState(def, def.angleDeg * Math.PI / 180);
       const idx = eng.addBody(st);
-      return { def, idx, name: def.name, color: def.color, mu: st.mu, radiusAU: st.radiusAU, soi: st.soi, a: def.a, x: st.x, y: st.y, vx: st.vx, vy: st.vy };
+      const startAngleRad = def.angleDeg * Math.PI / 180;
+      return {
+        def, idx, name: def.name, color: def.color, mu: st.mu, radiusAU: st.radiusAU, soi: st.soi, a: def.a,
+        x: st.x, y: st.y, vx: st.vx, vy: st.vy,
+        // 렌더러가 궤도를 '지나온 부분만' 호로 그릴 수 있도록 시작각과
+        // 누적 스윕각(여러 바퀴 돌아도 계속 더해짐)을 추적한다.
+        startAngleRad,
+        lastAngleRad: startAngleRad,
+        sweptAngle: 0
+      };
     });
     this.engine = eng;
     this.craftIdx = -1;
@@ -61,6 +70,10 @@ class Simulation {
     const S = this.engine.S;
     S[o] = p.x; S[o + 1] = p.y; S[o + 2] = p.vx; S[o + 3] = p.vy;
     Object.assign(this.engine.bodies[p.idx], { x: p.x, y: p.y, vx: p.vx, vy: p.vy });
+    // 프리셋이 위상각을 강제로 재배치했으므로, 궤도 호의 시작 기준도 여기서 다시 잡는다.
+    p.startAngleRad = angRad;
+    p.lastAngleRad = angRad;
+    p.sweptAngle = 0;
   }
 
   _craftInitialState(planet, vinfKms, angleDeg) {
@@ -171,7 +184,15 @@ class Simulation {
         this.pushTrail();
       }
     }
-    this.planets.forEach(p => Object.assign(p, eng.bodies[p.idx]));
+    this.planets.forEach(p => {
+      Object.assign(p, eng.bodies[p.idx]);
+      const ang = Math.atan2(p.y, p.x);
+      let delta = ang - p.lastAngleRad;
+      // -π..π 범위로 정규화 (한 프레임에 반 바퀴 이상 돌지는 않는다고 가정)
+      delta = ((delta + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
+      p.sweptAngle += delta;
+      p.lastAngleRad = ang;
+    });
   }
 
   pushTrail() {

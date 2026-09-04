@@ -20,7 +20,8 @@ class UI {
       "preMars", "preVenusGain", "preVenusLoss", "preVoyager", "btnReset",
       "btnPlay", "btnHome", "rngSpeed", "outSpeed",
       "chkPred", "chkFollow", "chkOrbits",
-      "tTime", "tSpeed", "tDist", "tA", "tE", "tNear", "tStatus", "tDv", "log"
+      "tTime", "tSpeed", "tDist", "tA", "tE", "tNear", "tStatus", "tDv", "log",
+      "btnPanelToggle"
     ].forEach(id => { this._els[id] = document.getElementById(id); });
 
     const sel = this._els.selPlanet;
@@ -52,6 +53,12 @@ class UI {
     });
     E.selPlanet.addEventListener("change", () => { this.predDirty = true; });
     E.chkPred.addEventListener("change", () => { this.predDirty = true; });
+
+    E.btnPanelToggle.addEventListener("click", () => {
+      document.getElementById("app").classList.toggle("panel-hidden");
+      // 패널이 사라지면서 #stage 폭이 바뀌므로 캔버스를 다시 맞춘다.
+      requestAnimationFrame(() => this.r.resize());
+    });
 
     E.btnLaunch.addEventListener("click", () => this.launchFromPanel());
     E.btnPlay.addEventListener("click", () => this.setRunning(!this.sim.running));

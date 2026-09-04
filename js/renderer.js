@@ -1,6 +1,14 @@
 const ZOOM_MIN_FACTOR = 140;
 const ZOOM_MAX_PP = 3e8;
 
+function hexToRgba(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 class Renderer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -98,10 +106,20 @@ class Renderer {
         const r = p.def.a * pp;
         if (r < 12 || r > Math.max(this.w, this.h) * 40) continue;
         ctx.beginPath();
-        ctx.arc(sunP[0], sunP[1], r, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(255,255,255,0.10)";
-        ctx.lineWidth = 1;
+        const swept = p.sweptAngle || 0;
+        if (Math.abs(swept) >= Math.PI * 2 - 1e-6) {
+          // 한 바퀴 이상 돈 행성은 그냥 전체 원으로 표시
+          ctx.arc(sunP[0], sunP[1], r, 0, Math.PI * 2);
+        } else {
+          // 캔버스 각도(φ)는 화면 y축이 뒤집혀 있어 월드 각도(θ)와 부호가 반대다: φ = -θ
+          const theta0 = p.startAngleRad || 0;
+          const theta1 = theta0 + swept;
+          ctx.arc(sunP[0], sunP[1], r, -theta0, -theta1, true);
+        }
+        ctx.strokeStyle = p.color ? hexToRgba(p.color, 0.55) : "rgba(255,255,255,0.10)";
+        ctx.lineWidth = 1.4;
         ctx.stroke();
+        // 지금까지 지나온 궤적의 '끝점'에 행성이 있으므로 별도 마커는 아래 행성 렌더링에서 그린다.
       }
     }
 
